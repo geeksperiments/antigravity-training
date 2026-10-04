@@ -228,7 +228,7 @@ flowchart TB
 - **Gemini 3.1 Pro**: high-capability Gemini model for complex coding (Low/High)
 - **Claude Sonnet 5.5 / Opus 5.5**: Anthropic models, Low/Medium/High effort
 - **GPT-OSS 120B**: open-weights option
-- **List models**: `agy models`  ·  **Switch**: `/model` or `--model <slug>`
+- **List models**: `agy models`  ·  **Switch**: `/model` or `--model <slug>`  ·  `/fast` toggles fast mode (Opus 5.5)
 - **Reasoning effort**: `--effort low|medium|high` (`xhigh`/`max` where a model supports them) or `/effort` mid-session
 - **Gemini 4 Argon**: announced 2026-09-30, rolling out to Fairwind cyber-defense testers first — not in `agy models` yet
 
@@ -445,39 +445,6 @@ agy -p "Analyze the architecture in @./src/"
 
 ---
 
-# Slash Commands in Action (Context)
-
-```bash
-# Show what context is loaded and token usage
-/context
-
-# Switch the active model
-/model
-
-# Manage tool permission rules
-/permissions
-
-# Open settings and preferences (/settings is an alias)
-/config
-```
-
----
-
-# Slash Commands in Action (Sessions)
-
-```bash
-# Open the conversation browser
-/resume
-
-# Branch this conversation into a parallel session
-/fork
-
-# Ask a quick side question without derailing the current task
-/btw what does the retry decorator in @./src/utils.py do?
-```
-
----
-
 # Keyboard Shortcuts: Editing
 
 <v-clicks>
@@ -498,6 +465,7 @@ agy -p "Analyze the architecture in @./src/"
 - `Ctrl+C` - Cancel current operation
 - `Ctrl+D` `Ctrl+D` - Exit Antigravity CLI (press twice)
 - `Ctrl+G` - Edit a long prompt in `$EDITOR`
+- `Alt+J` - Jump to the subagent waiting for approval · `Ctrl+K` - Approve the pending action inline
 
 </v-clicks>
 
@@ -569,7 +537,9 @@ backgroundSize: cover
 <v-clicks>
 
 - **Default** (`request-review`): prompt for approval on each tool call
-- **`/permissions`**: add, edit, or remove allow/deny rules in-CLI
+- **Approval prompts offer a scoped always-allow** (e.g. `git status` with any arguments) — the quickest way to grow your allow list (1.2.15)
+- **`/permissions`**: add, edit, or remove allow/deny rules; two layers — `global` (`settings.json`) and `shared` (`~/.gemini/config/config.json`, shared with the desktop app)
+- Rule kinds: `command(...)`, `read_file(path)`, `read_url(host)`; `unsandboxed` rules are deprecated in favor of `command` (1.2.2)
 - **`toolPermission`** setting: `request-review` · `proceed-in-sandbox` · `strict` · `always-proceed`
 - **`--dangerously-skip-permissions`**: auto-approve everything (use with care)
 
@@ -596,7 +566,7 @@ agy --dangerously-skip-permissions
 - **`accept-edits`**: auto-approves file edits and creations
 - **`plan`**: prepends `/plan` — analyze and outline before writing code
 - **Cycle** with `Shift+Tab`; the current mode shows in the status line
-- `/planning` was removed in 1.1.0; `/fast` remains — `/help` describes it as "Toggles fast mode (Opus 5.5)"
+- `/planning` was removed in 1.1.0 — the `/plan` prefix and `Shift+Tab` cycling replace it
 
 </v-clicks>
 
@@ -668,32 +638,10 @@ stateDiagram-v2
 
 <v-clicks>
 
-- Isolate file operations away from your host
-- Multiple backends depending on your OS
-- Prevents accidental system changes
-- Perfect for exploring unfamiliar code
-
-</v-clicks>
-
-```bash
-# Run in sandbox mode (terminal restrictions enabled)
-agy --sandbox
-
-# Combine with a one-shot prompt
-agy --sandbox -p "Refactor this entire codebase"
-```
-
----
-
-# Sandbox & Permission Modes
-
-<v-clicks>
-
-- **`--sandbox`**: run with terminal restrictions enabled
-- **`proceed-in-sandbox`** permission mode: auto-approve commands that
-  stay inside the sandbox, prompt only when one tries to break out
-- Sandbox isolation is enforced in headless print mode too (`-p`)
-- Pair with `/permissions` rules for durable guardrails
+- **`--sandbox`**: run with terminal restrictions enabled — multiple backends depending on your OS
+- **`proceed-in-sandbox`** permission mode: auto-approve commands that stay inside the sandbox, prompt only when one tries to break out
+- Enforced in headless print mode too (`-p`)
+- Pair with `/permissions` rules for durable guardrails; ideal for exploring unfamiliar code
 
 </v-clicks>
 
@@ -704,8 +652,6 @@ agy --sandbox
 # Non-interactive, sandbox still enforced
 agy --sandbox -p "Audit @./src for risky calls"
 ```
-
-📖 [antigravity.google/docs](https://antigravity.google/docs)
 
 ---
 
@@ -898,11 +844,13 @@ backgroundSize: cover
   "permissions": {
     "allow": ["command(git status)", "command(npm test)"]
   },
-  "trustedWorkspaces": ["/path/to/project"]
+  "trustedWorkspaces": ["/path/to/project"],
+  "verbosity": "medium",
+  "queuedMessages": "queue"
 }
 ```
 
-Full list: `/config` in-session, or `agy -p "/settings"` to dump current values.
+`verbosity: medium` (1.2.10) folds tool calls into "Explored N files" summaries — good for demos. Full list: `/config` in-session, or `agy -p "/settings"` to dump current values.
 
 ---
 
@@ -927,29 +875,6 @@ Full list: `/config` in-session, or `agy -p "/settings"` to dump current values.
 ```
 
 A working Python example lives in `exercises/python/weather-app/statusline.py`.
-
----
-
-# Tool Permissions & Rules
-
-<v-clicks>
-
-- **`/permissions`**: add, edit, or remove allow/deny rules in-CLI
-- Rules merge across three layers: project, user, and CLI settings
-- Shared with the Antigravity desktop app's permission settings
-- Keep high-risk tools constrained for teams
-
-</v-clicks>
-
-```bash
-# Manage permission rules interactively
-> /permissions
-
-# Auto-approve everything (use with care)
-agy --dangerously-skip-permissions
-```
-
-📖 [antigravity.google/docs](https://antigravity.google/docs)
 
 ---
 
@@ -1170,21 +1095,23 @@ Per-project servers go in `.agents/mcp_config.json`. Reload with `/mcp`.
 
 ---
 
-# Plugins from Marketplaces
+# Plugins
 
 <v-clicks>
 
-- Install from a marketplace with `plugin@marketplace` syntax
-- Plugins bundle **skills** and **subagents**, discovered automatically
-- Import existing Gemini or Claude plugins with `agy plugin import`
-- Plugins install to the shared `~/.gemini/config/` directory
+- A plugin bundles **skills, subagents, rules, hooks, and MCP servers**; everything inside is discovered automatically
+- Managed with `agy plugin` — install from a marketplace with `plugin@marketplace` syntax, or import existing Gemini / Claude plugins
+- `agy plugin validate <path>` checks a plugin before you share it
+- Installed to the shared `~/.gemini/config/` directory; plugin MCP servers are namespaced `<plugin>_<server>` (1.2.2)
 
 </v-clicks>
 
 ```bash
-# Install, then link a marketplace
+agy plugin list
 agy plugin install my-plugin@my-marketplace
 agy plugin link my-marketplace ./target
+agy plugin import gemini
+agy plugin disable my-plugin && agy plugin enable my-plugin
 ```
 
 📖 [antigravity.google/docs](https://antigravity.google/docs)
@@ -1197,18 +1124,20 @@ agy plugin link my-marketplace ./target
 
 - Ask the agent to **delegate**: it dispatches a subagent via `invoke_subagent`
 - Define your own in Markdown: `.agents/agents/<name>.md` (or `~/.gemini/config/agents/`)
-- Frontmatter: `subagent: true`, `mainAgent`, `model: flash|pro|inherit`, `hidden`, `inheritMcp`
-- Monitor with `/agents`; background shell tasks with `/tasks`; ask a side question with `/btw`
+- Frontmatter: `name` + `description` (required), `subagent: true`, `mainAgent`, `model: flash|pro|inherit`, `tools`, `commandExecutionPolicy`, `skills`; newer: `agents:`, `rules:`, `excludeDefaultComponents`
+- Talk to one directly: `@<subagent> <message>` (1.2.9) · monitor with `/agents`, shell tasks with `/tasks`
+- Built-ins: `research`, `browser` (`/browser`), `self`; `/boost` and `/teamwork-preview` orchestrate teams of them
 - Launch straight into a custom agent: `agy --agent <name>` · list with `agy agents`
 
 </v-clicks>
 
 ```markdown
 ---
+name: test-writer
+description: Writes focused unit tests for a referenced file. Never edits source.
 subagent: true
 model: flash
 ---
-# Test writer
 You write focused unit tests. Never modify source files.
 ```
 
@@ -1232,29 +1161,6 @@ sequenceDiagram
     Sub-->>Main: Return test file changes
     Main->>User: Present changes via Artifact Review (/diff)
     Note over User,Main: Monitored live via /agents
-```
-
----
-
-# Plugin System
-
-<v-clicks>
-
-- Extend Antigravity CLI with **plugins** (skills + subagents)
-- Managed with the `agy plugin` subcommand
-- Import from Gemini or Claude: `agy plugin import gemini`
-- Installed plugins are scanned for skills and agents automatically
-
-</v-clicks>
-
-```bash
-# List installed plugins
-agy plugin list
-
-# Install / enable / disable
-agy plugin install my-plugin@marketplace
-agy plugin enable my-plugin
-agy plugin disable my-plugin
 ```
 
 ---
@@ -1373,6 +1279,29 @@ agy --conversation <id>
 
 ---
 
+# Remote Control (1.2.x)
+
+<v-clicks>
+
+- Follow and drive a terminal session from another device: `agy --remote-control` at launch, or `/remote-control` mid-session; `/remote-control off` tears the tunnel down
+- Background daemon so the machine stays reachable: `agy remote-control start|status|stop` (`start --name <label>` sets the device label)
+- Remote turns run with the session's permission mode and access grants (1.2.6)
+- Artifacts render as cards in the companion view
+
+</v-clicks>
+
+```bash
+agy --remote-control           # this session only
+agy remote-control start       # persistent daemon (registered with the OS service manager)
+agy remote-control status
+```
+
+<!--
+PRESENTER NOTE: described from `agy remote-control --help` and the 1.2.0–1.2.6 changelog; not yet demoed live. Open the companion page once before showing it.
+-->
+
+---
+
 # Non-Interactive (Print) Mode
 
 <v-clicks>
@@ -1438,155 +1367,34 @@ backgroundSize: cover
 
 ---
 
-# Code Exploration
+# Prompt Patterns: Build and Understand
 
-<v-clicks>
+Interactive sessions, grounded with `@` and verified with `!` — the labs practice each of these:
 
-- Understand unfamiliar codebases
-- Trace dependencies and data flow
-- Find patterns and conventions
-- Generate architecture documentation
-
-</v-clicks>
-
-```bash
-agy -p "Analyze the architecture of @./src/ and explain
-how the components interact"
-
-agy -p "Trace the flow from the API endpoint to the database
-in @./src/controllers/ and @./src/services/"
-```
+| Workflow | Prompt shape |
+|---|---|
+| **Explore** | "Analyze the architecture of `@./src/` and trace the flow from the API endpoint to the database" |
+| **Test** | "Create pytest unit tests for `@./app/services/weather_service.py` with edge cases and mocks, then run `!pytest`" |
+| **Document** | "Add docstrings to the public functions in `@./app/services/`; draw the components as a Mermaid diagram" |
+| **Refactor** | "Modernize `@./src/legacy.py` to Python 3.12 idioms — type hints, `match` — keeping the tests green" |
 
 ---
 
-# Test Generation
+# Prompt Patterns: Fix, Ship, Automate
+
+| Workflow | Prompt shape |
+|---|---|
+| **Debug** | "This test fails with `@./tests/output.log`. Find the root cause in `@./src/app.py`, fix it, and re-run `!npm test`" |
+| **Git** | `!git diff --staged` then "Write a conventional commit message for these changes" |
+| **PR** | "Summarize the last 5 commits as a pull request description" |
+| **CI** | `agy -p` with `--output-format json --json-schema` for a yes/no gate — see *CI Example: Gate + Report* |
 
 <v-clicks>
 
-- Generate unit tests for existing code
-- Identify edge cases automatically
-- Create integration test scaffolding
-- Mock setup and fixtures
+- Interactive mode for anything you'll iterate on; `-p` for pipelines and scripts
+- A non-zero exit from `-p` means the *run* failed — use a schema to carry the *verdict*
 
 </v-clicks>
-
-```bash
-agy -p "Create comprehensive unit tests for @./src/utils.py
-with pytest, including edge cases"
-
-agy -p "Generate integration tests for @./src/api/users.py
-with proper mocking"
-```
-
----
-
-# Documentation Generation
-
-<v-clicks>
-
-- README files for projects
-- API documentation
-- Architecture diagrams (Mermaid)
-- Code comments and docstrings
-
-</v-clicks>
-
-```bash
-agy -p "Generate a comprehensive README.md for this project"
-
-agy -p "Add detailed docstrings to all public functions
-in @./src/services/"
-
-agy -p "Create a Mermaid diagram showing the system architecture"
-```
-
----
-
-# Refactoring & Modernization
-
-<v-clicks>
-
-- Upgrade legacy code patterns
-- Apply modern language features
-- Improve code organization
-- Fix anti-patterns
-
-</v-clicks>
-
-```bash
-agy -p "Refactor @./src/legacy.py to use modern Python 3.12
-features like type hints and match statements"
-
-agy -p "Convert this callback-based code to async/await
-@./src/api.js"
-```
-
----
-
-# Debugging Workflows
-
-<v-clicks>
-
-- Analyze error messages and stack traces
-- Identify root causes
-- Suggest fixes with context
-- Test and verify solutions
-
-</v-clicks>
-
-```bash
-agy -p "This test is failing with @./tests/output.log.
-Analyze the error and fix the issue in @./src/app.py"
-
-agy -p "Debug why the API returns 500 errors.
-Check @./src/routes.py and @./src/middleware.py"
-```
-
----
-
-# Git Workflows
-
-<v-clicks>
-
-- Generate commit messages
-- Create pull request descriptions
-- Analyze diffs and changes
-- Resolve merge conflicts
-
-</v-clicks>
-
-```bash
-# Analyze staged changes
-!git diff --staged
-"Generate a conventional commit message for these changes"
-
-# Create PR description
-"Create a pull request description summarizing the changes
-from the last 5 commits"
-```
-
----
-
-# CI/CD Integration
-
-<v-clicks>
-
-- Non-interactive `--print` mode for pipelines
-- Capture stdout to a file for parsing
-- Exit codes for success/failure
-- Automated code reviews
-
-</v-clicks>
-
-```bash
-# In CI/CD pipeline
-agy -p "Review @./src/ for security issues" > review.txt
-
-# Check exit code
-if agy -p "Verify all tests pass"; then
-  echo "All checks passed"
-fi
-```
 
 ---
 layout: image-right
@@ -1614,6 +1422,7 @@ backgroundSize: cover
 - **Device-code flow**: shows a URL + code for remote/SSH machines
 - **`ANTIGRAVITY_API_KEY`**: scripts and headless automation
 - **G1 credits**: keep teams productive past standard quota
+- **Enterprise**: Business sign-in against a Google Cloud project, Workforce Identity Federation (*Use advanced SSO config*), ADC; pick the project with `--project <id|name>` (1.1.10–1.1.18, not exercised in this course)
 
 </v-clicks>
 
@@ -1670,6 +1479,7 @@ agy
 - Skills package repeatable expert workflows for teams
 - MCP connects external systems (docs, data, browsers, APIs)
 - Distribute skills and subagents together inside plugins
+- Or commit `.agents/skills.json` (`entries`, `inherits`, `include_only` / `exclude`) pointing at a shared folder — clones pick it up automatically
 - Use `disabledTools` to narrow risky MCP exposure
 
 </v-clicks>
@@ -1802,6 +1612,8 @@ and summarize the diff."
 - **`/fork` for experiments**: Branch a session before trying an alternative or risky implementation
 - **`/rewind` on dead ends**: Roll back turns rather than prompting in circles
 - **`/context` checks**: Monitor token usage and actively loaded context files
+- **Compaction is automatic**: long histories are summarized in place and the boundary is marked in the transcript
+- **`/model <name> <prompt>`**: consult another model for one prompt, then return to your default (1.1.27)
 - **Fresh session for fresh tasks**: Don't carry unrelated refactoring history into a new feature
 
 </v-clicks>
@@ -1848,7 +1660,7 @@ and summarize the diff."
 
 <v-clicks>
 
-- **Keep it focused** - Relevant project info only
+- **Keep it focused** - each file is capped at 24 KB and all rules share a 20K-token budget; over-budget files shrink to path pointers
 - **Update regularly** - Reflect current state
 - **Use imports** - Modularize large contexts
 - **Include examples** - Show expected patterns
@@ -1973,7 +1785,7 @@ layout: section
 
 # Appendix
 
-Version details and command reference
+Version-by-version feature reference (commands live in CHEATSHEET.md)
 
 ---
 
@@ -1996,62 +1808,3 @@ Version details and command reference
 - **1.2.x**: Remote Control (`agy remote-control start|status|stop`, `--remote-control`), unlimited `-p` runs + `AGY_ERROR` exit 3 (1.2.6), `@<subagent> <msg>` (1.2.9), workspace `.agents/hooks.json` loads
 - **Latest stable track**: Antigravity CLI `1.2.16` — see `agy changelog`
 
----
-
-# Command Reference: Basic Usage
-
-```bash
-# Interactive mode
-agy
-
-# One-shot (print) mode
-agy -p "prompt"
-
-# Interactive with initial prompt
-agy -i "context"
-```
-
----
-
-# Command Reference: Safety
-
-```bash
-# Run in sandbox mode
-agy --sandbox
-
-# Auto-approve all tool calls (use with care)
-agy --dangerously-skip-permissions
-
-# Manage permission rules in-session
-> /permissions
-```
-
----
-
-# Command Reference: Sessions
-
-```bash
-# Continue the most recent conversation
-agy -c
-
-# Resume a conversation by ID
-agy --conversation <id>
-
-# Browse conversations in-session
-> /resume
-```
-
----
-
-# Command Reference: Output
-
-```bash
-# Print mode for scripting
-agy -p "prompt"
-
-# Bound how long print mode waits
-agy --print-timeout 2m -p "prompt"
-
-# Write logs to a file
-agy --log-file ./agy.log
-```

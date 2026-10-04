@@ -17,7 +17,7 @@ agy --mode plan                      # Start in planning mode (outline before co
 
 # Model & reasoning controls
 agy --model gemini-3.1-pro-high      # Pin a specific model slug (see: agy models)
-agy --effort low|medium|high         # Set reasoning/thinking effort
+agy --effort low|medium|high         # Reasoning effort (xhigh|max where supported)
 agy --sandbox                        # Enable OS terminal restrictions
 agy --dangerously-skip-permissions   # Auto-approve all tool calls (use with caution)
 
@@ -63,12 +63,12 @@ agy -p "Count" --output-format json \
 * `/permissions` — Manage tool allow/deny rules (`run_command`, file edits).
 
 ### Models & Tools
-* `/model` — Switch active model mid-session (Gemini Pro/Flash, Claude Sonnet/Opus, GPT-OSS).
+* `/model` — Switch active model mid-session; `/model <name> <prompt>` consults another model once. `/fast` toggles fast mode (Opus 5.5).
 * `/effort` — Adjust thinking effort (`low`, `medium`, `high`).
 * `/mcp` — View connected Model Context Protocol servers and reload configuration.
 * `/agents` — Monitor dispatched background subagents.
 * `/tasks` — View and manage background shell processes.
-* `/settings` — Interactive settings configuration editor.
+* `/config` (alias `/settings`) — Interactive settings configuration editor.
 * `/quota` · `/credits` · `/usage` — Check API quota, rate limits, and G1 credits.
 
 ---
@@ -86,6 +86,8 @@ agy -p "Count" --output-format json \
 | `.agents/skills/<name>/SKILL.md` | Project | Project-scoped skills shared with your team |
 | `.agents/agents/<name>.md` | Project | Custom markdown subagents (`subagent: true`, `model: flash`) |
 | `~/.gemini/config/hooks.json` | User (Global) | Lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`) |
+| `.agents/hooks.json` (+ `scripts/`) | Project | Project-scoped hooks, loaded since CLI 1.2.x |
+| `.agents/skills.json` | Project | Manifest registering shared skill folders (`entries`, `inherits`) |
 
 ---
 

@@ -43,6 +43,11 @@ agy --sandbox                         # terminal restrictions enabled
 Use `Ctrl+R` to open the Artifact Review panel and inspect proposed changes,
 and `Esc` to interrupt the agent mid-stream.
 
+Two prompts you will see often: web **URL fetches ask for approval** (since
+1.1.28), and when you approve a shell command the prompt offers a scoped
+*always allow* (e.g. `git status` with any arguments) — accepting those is
+the easiest way to build your allow list.
+
 ---
 
 ## Lab 1: Getting Started and Project Creation
@@ -53,9 +58,9 @@ and `Esc` to interrupt the agent mid-stream.
 
 ### Setup
 
-1. Create a new empty directory:
+1. Create a new empty directory **outside the course repository**:
    ```bash
-   mkdir my-task-manager && cd my-task-manager
+   cd ~ && mkdir my-task-manager && cd my-task-manager
    ```
 
 2. Initialize git:
@@ -322,10 +327,10 @@ Use the project from previous labs or choose a new exercise project with existin
 
 1. **Unit test generation**:
    ```
-   Create unit tests for a chosen file:
-   - Java: @exercises/java/bookstore-api/src/main/java/com/example/bookstore/service/BookService.java using JUnit 5
-   - JavaScript: @exercises/javascript/task-manager/src/taskManager.js using Jest
-   - Python: @exercises/python/weather-app/app/services/weather_service.py using pytest
+   Create unit tests for a chosen file (paths are relative to the project you are in):
+   - Java: @src/main/java/com/example/bookstore/service/BookService.java using JUnit 5
+   - JavaScript: @src/taskManager.js using Jest
+   - Python: @app/services/weather_service.py using pytest
 
    Requirements:
    - Tests for all public methods
@@ -335,20 +340,24 @@ Use the project from previous labs or choose a new exercise project with existin
 
 2. **Test coverage analysis**:
    ```
-   Analyze @./src/models/ and identify which classes and methods
-   are missing test coverage. Generate tests to fill the gaps.
+   Analyze the source tree (@app/ for Python, @src/ for JavaScript,
+   @src/main/java/ for Java) against the existing tests and identify which
+   classes and functions lack coverage. Generate tests to fill the gaps.
    ```
 
 3. **Edge case discovery**:
    ```
-   What edge cases should I test for the user authentication flow?
+   What edge cases should I test for this project's main lookup operation
+   (city weather lookup, task filtering and search, or book search)?
    List them and generate test cases for each.
    ```
 
 4. **Integration tests**:
    ```
-   Create integration tests for the API endpoints in @./src/routes/
-   that test the full request-response cycle with test fixtures.
+   Create integration tests that exercise the full request-response cycle
+   with fixtures — Python: the routes in @app/routes/; Java: the controller in
+   @src/main/java/com/example/bookstore/controller/. For the JavaScript CLI,
+   test the JSON persistence round-trip end to end instead.
    ```
 
 5. **Test data generation**:
@@ -364,8 +373,9 @@ Use the project from previous labs or choose a new exercise project with existin
    ```bash
    # Execute the generated tests
    !pytest -v
-   # Or for Node.js:
+   # Or for Node.js / Java:
    !npm test
+   !./mvnw test
    ```
 
    Then ask:
@@ -432,7 +442,10 @@ echo "# Config Test" > README.md
    ```
    Add an allow rule such as `command(git status)`, then look at where it
    landed: `/permissions` labels each rule `global` (`settings.json`) or
-   `shared` (`~/.gemini/config/config.json`).
+   `shared` (`~/.gemini/config/config.json`). Next, ask the agent to run
+   `git log --oneline -3` and, at the approval prompt, accept the scoped
+   *always allow* it offers — check `/permissions` again to see the rule it
+   wrote for you.
 
    Then try the execution modes: press `Shift+Tab` to cycle
    `default` → `accept-edits` → `plan`, or launch with `agy --mode plan`.
@@ -461,10 +474,9 @@ echo "# Config Test" > README.md
 
    Then inspect what changed before accepting:
    ```
-   /context
+   /diff
    ```
-   Use `Ctrl+R` to open the Artifact Review panel and `/diff` to review
-   the changes.
+   Use `Ctrl+R` to open the Artifact Review panel for the same view.
 
 6. **Permission modes**:
    ```bash
@@ -489,7 +501,7 @@ echo "# Config Test" > README.md
 
 ### Expected Outcomes
 
-- Configure project-specific settings
+- Configure your user settings and permission rules
 - Understand sandbox mode and Artifact Review
 - Practice permission rules and modes
 - Switch between available models
@@ -660,17 +672,19 @@ echo "# Config Test" > README.md
     Create `.agents/agents/test-writer.md`:
     ```markdown
     ---
+    name: test-writer
+    description: Writes focused pytest unit tests for a referenced file. Never edits source.
     subagent: true
     model: flash
     ---
-    # Test writer
     You write focused pytest unit tests. Never modify source files.
     ```
     Then in a session:
     ```
     Delegate to the test-writer subagent: write unit tests for @./src/calculator.py
     ```
-    Watch it in `/agents`. Subagents run with their own context; their
+    Watch it in `/agents`; press `Alt+J` if it asks for an approval. Message it
+    directly with `@test-writer add a test for division by zero`. Subagents run with their own context; their
     conversations stay separate in `/resume`. List agents from the shell
     with `agy agents`; launch straight into one with `agy --agent test-writer`.
 
@@ -764,13 +778,22 @@ After completing this lab:
    Reload with `/mcp` (or restart `agy`) and confirm the narrowed tool
    surface in a session.
 
-8. **MCP resource prompt practice**:
+8. **Share skills from a repo folder** (optional):
+   Move the `review` skill to `tools/agents/skills/review/` and commit a
+   `.agents/skills.json`:
+   ```json
+   { "entries": [ { "path": "tools/agents/skills" } ] }
+   ```
+   Restart `agy` and confirm `/skills` still lists `/review`. A clone of the
+   repo now gets the team's skills with no per-user setup.
+
+9. **MCP resource prompt practice**:
    If your MCP server exposes resources, reference one in a prompt and
    summarize what changed versus a tool-only prompt.
 
 ### Part D: CI/Automation Pattern (10 minutes)
 
-9. **Create a repeatable automation check**:
+10. **Create a repeatable automation check**:
    Add a script snippet to `automation_notes.md`:
    ```bash
    agy -p "Review @./src/ for security issues" > review.txt
@@ -781,7 +804,7 @@ After completing this lab:
    [ "$verdict" = "false" ] || { echo "Gate failed"; exit 1; }
    ```
 
-10. **Post-process output**:
+11. **Post-process output**:
    Run the JSON variant once more with `--output-format stream-json` and
    watch the `init` / `step_update` / `result` events arrive — that's what a
    CI log or dashboard would consume.

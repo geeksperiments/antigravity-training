@@ -111,17 +111,15 @@ npm run dev
 
 ## Course Schedule
 
-| Section | Duration |
-|---------|----------|
-| Introduction & Setup | 10 min |
-| Installation & Prerequisites | 15 min |
-| Authentication & Account Setup | 10 min |
-| First Steps & Basic Interface | 15 min |
-| Core Commands & Functionality | 65 min |
-| Configuration & Customization | 65 min |
-| Advanced Features & Extensions | 65 min |
-| Practical Applications & Workflows | 45 min |
-| Wrap-up & Q&A | 15 min |
+| Time | Section | Lab |
+|------|---------|-----|
+| 0:00 – 0:45 | Foundation, setup, first project | Lab 1 |
+| 0:45 – 1:45 | Code exploration and core operations | Lab 2 |
+| 1:45 – 2:45 | Context management (AGENTS.md) and test generation | Labs 3–4 |
+| 2:45 – 3:00 | Break | |
+| 3:00 – 4:00 | Configuration, safety, permissions | Lab 5 |
+| 4:00 – 4:45 | MCP, plugins, skills, subagents | Lab 6 |
+| 4:45 – 5:00 | Automation patterns, governance, Q&A | Lab 7 (optional / take-home) |
 
 ## Key Antigravity CLI Features Covered
 
