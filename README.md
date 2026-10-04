@@ -154,7 +154,7 @@ npm run dev
 - `/codesearch` (1.1.3), Vim editor mode (1.1.11), `/fork`, `/btw`, `/rewind`
 - Direct Gemini API access via `GEMINI_API_KEY` + `modelProvider: "gemini"` (1.1.13)
 - Since 1.1.13: `agy mcp add|remove|list|enable|disable` (1.1.16), `--input-format stream-json` (1.1.15), `/voice` dictation (1.1.21), `/model <name>` saves a default (1.1.22)
-- 1.2.x: Remote Control (`agy remote-control`), unlimited `-p` runs with `AGY_ERROR` exit code 3 (1.2.6), `/skills reload` (1.2.4), `@<subagent>` messages (1.2.9), workspace `.agents/hooks.json` hooks
+- 1.2.x: Remote Control (`agy remote-control`), unlimited `-p` runs with `AGY_ERROR` exit code 3 (1.2.6), `@<subagent>` messages (1.2.9), workspace `.agents/hooks.json` hooks
 - Run `agy changelog` for the full release notes
 
 ## Tips for Success

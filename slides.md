@@ -116,7 +116,7 @@ SCHEDULE BREAKDOWN (5 hours total):
 - **Safer control**: cycle `default` → `accept-edits` → `plan`, with review before writes
 - **Automation-ready output**: print mode supports JSON, streaming events, and response schemas
 - **Composable workflows**: custom agents, MCP management, workspace search, and voice input
-- **1.2.x (Sep–Oct 2026)**: Remote Control, unlimited headless runs with structured error exits, workspace `.agents/hooks.json`, `/skills reload`
+- **1.2.x (Sep–Oct 2026)**: Remote Control, unlimited headless runs with structured error exits, workspace `.agents/hooks.json`, `@<subagent>` messages
 
 </v-clicks>
 
@@ -596,7 +596,7 @@ agy --dangerously-skip-permissions
 - **`accept-edits`**: auto-approves file edits and creations
 - **`plan`**: prepends `/plan` — analyze and outline before writing code
 - **Cycle** with `Shift+Tab`; the current mode shows in the status line
-- `/planning` and `/fast` were removed in 1.1.0
+- `/planning` was removed in 1.1.0 (`/fast` is still listed in `/help`)
 
 </v-clicks>
 
@@ -1993,7 +1993,7 @@ Version details and command reference
 - **Slash commands in `-p`**: skills expand; read-only commands avoid quota use (1.1.9–1.1.12)
 - **Direct Gemini API**: `GEMINI_API_KEY` + `modelProvider: "gemini"` — no sign-in (1.1.13)
 - **Later additions**: `agy mcp add|list|remove` (1.1.16), `/voice` (1.1.21), saved `/model <name>` defaults (1.1.22)
-- **1.2.x**: Remote Control (`agy remote-control start|status|stop`, `--remote-control`), unlimited `-p` runs + `AGY_ERROR` exit 3 (1.2.6), `/skills reload` (1.2.4), `@<subagent> <msg>` (1.2.9), workspace `.agents/hooks.json` loads
+- **1.2.x**: Remote Control (`agy remote-control start|status|stop`, `--remote-control`), unlimited `-p` runs + `AGY_ERROR` exit 3 (1.2.6), `@<subagent> <msg>` (1.2.9), workspace `.agents/hooks.json` loads
 - **Latest stable track**: Antigravity CLI `1.2.16` — see `agy changelog`
 
 ---

@@ -99,14 +99,18 @@ Ground truth, in order of trust:
    `/docs/cli/...` paths redirect there (checked 2026-10-04); `/docs/cli/hooks`
    is a 404, use the shipped `hooks.md` instead.
 4. https://antigravity.google/docs/cli/reference — **partly stale**: still
-   listed `/planning` and `/fast` after 1.1.0 removed them. Cross-check.
+   lists `/planning`, which 1.1.0 removed. (`/fast` IS real — Ken confirmed
+   it in interactive `/help` on 1.2.16, 2026-10-04.) Cross-check.
    Also client-rendered: `curl` gets no command list, read it in a browser.
 
 Quick probe for whether a slash command really exists:
 `agy -p "/foo"` — a real interactive-only command errors with
 "not available in print mode"; an unknown one gets answered by the model.
-(`/export`, `/agent <task>`, `/planning`, `/fast` all failed this test and
-were removed from the materials.)
+(`/export`, `/agent <task>`, `/planning` failed this test and were removed
+from the materials.) The probe can give false negatives: `/fast` was model-
+answered in `-p` yet exists interactively, and the 1.2.4 changelog's
+`/skills reload` does not exist on 1.2.16 (`/skills` takes no arguments).
+Interactive `/help` autocomplete is the final word.
 
 Facts that bit us this round (don't reintroduce):
 - Settings live in `~/.gemini/antigravity-cli/settings.json`, flat keys.
