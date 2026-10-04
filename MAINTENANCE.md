@@ -99,8 +99,8 @@ Ground truth, in order of trust:
    `/docs/cli/...` paths redirect there (checked 2026-10-04); `/docs/cli/hooks`
    is a 404, use the shipped `hooks.md` instead.
 4. https://antigravity.google/docs/cli/reference — **partly stale**: still
-   lists `/planning`, which 1.1.0 removed. (`/fast` IS real — Ken confirmed
-   it in interactive `/help` on 1.2.16, 2026-10-04.) Cross-check.
+   lists `/planning`, which 1.1.0 removed. (`/fast` IS real — interactive `/help` on 1.2.16
+   says "Toggles fast mode (Opus 5.5)", Ken confirmed 2026-10-04.) Cross-check.
    Also client-rendered: `curl` gets no command list, read it in a browser.
 
 Quick probe for whether a slash command really exists:

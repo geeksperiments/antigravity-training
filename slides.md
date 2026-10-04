@@ -596,7 +596,7 @@ agy --dangerously-skip-permissions
 - **`accept-edits`**: auto-approves file edits and creations
 - **`plan`**: prepends `/plan` — analyze and outline before writing code
 - **Cycle** with `Shift+Tab`; the current mode shows in the status line
-- `/planning` was removed in 1.1.0 (`/fast` is still listed in `/help`)
+- `/planning` was removed in 1.1.0; `/fast` remains — `/help` describes it as "Toggles fast mode (Opus 5.5)"
 
 </v-clicks>
 
