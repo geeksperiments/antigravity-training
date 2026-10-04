@@ -13,6 +13,7 @@ students or the taught material.** Triage below.
 | Lockfile | Before | After |
 |---|---|---|
 | Root `package-lock.json` (Slidev toolchain) | 18 (2 low / 7 mod / 9 high) | **4** (all high, one root cause) |
+| Root, 2026-10-04 (`npm audit fix --ignore-scripts`, Slidev 52.19 → 52.20.1) | 15 | **11** (two unpatched upstream chains, see below) |
 | `solutions/javascript/my-task-manager` | 0 | 0 |
  
 What fixed it (2026-08-19): regenerating the lockfile (`rm -rf node_modules
@@ -20,6 +21,10 @@ package-lock.json && npm install --ignore-scripts`) took Slidev 52.12 → 52.19
 and cleared most of it; a `package.json` override `"dompurify": "^3.4.14"`
 cleared the `monaco-editor`/`mermaid` → `dompurify` chain.
  
+As of 2026-10-04 the second chain is `braces <=3.0.3` via
+`@slidev/types → vite-plugin-static-copy → chokidar/fast-glob → micromatch → braces`;
+3.0.3 is the latest `braces` release, so there is nothing to override yet.
+
 The remaining 4 are all `image-size <=2.0.2` reached via
 `@slidev/cli → @slidev/client → pptxgenjs → image-size`. **There is no patched
 `image-size` release** (2.0.2 is the latest and is itself flagged), so no
@@ -74,10 +79,10 @@ in class regardless, so a stale dep or two is not a teaching hazard.
 
 ## Refreshing against a new Antigravity CLI release
 
-Last done: 2026-08-17 against **agy 1.1.13** (materials had been at 1.0.6); re-checked 2026-08-19 on 1.1.15 (no teaching-relevant changes in 1.1.14/15); re-checked 2026-09-02 on **1.1.24** (Gemini 3.8 Flash added, 3.5 Flash gone; `agy mcp` subcommands; workspace hooks still not loaded — see below).
+Last done: 2026-08-17 against **agy 1.1.13** (materials had been at 1.0.6); re-checked 2026-08-19 on 1.1.15 (no teaching-relevant changes in 1.1.14/15); re-checked 2026-09-02 on **1.1.24** (Gemini 3.8 Flash added, 3.5 Flash gone; `agy mcp` subcommands; workspace hooks still not loaded — see below); re-checked 2026-10-04 on **1.2.16** (workspace `.agents/hooks.json` now loads; `url` accepted alongside `serverUrl`; Claude 5.5 models; `-p` timeout unlimited by default; app 2.17.0).
 
 The "One Brand, Three Products" slide pins app/IDE/CLI version streams
-(2.8.x / 2.5.x / 1.1.x as of Aug 2026). Before each delivery check all three:
+(2.17.x / 2.5.x / 1.2.x as of Oct 2026). Before each delivery check all three:
 `agy --version`, and on macOS
 `defaults read "/Applications/Antigravity.app/Contents/Info.plist" CFBundleShortVersionString`
 (same for "Antigravity IDE.app"). Update the slide if a stream rolled major.
@@ -90,7 +95,9 @@ Ground truth, in order of trust:
 2. Docs shipped inside the CLI:
    `~/.gemini/antigravity-cli/builtin/skills/agy-customizations/docs/*.md`
    (skills, plugins, mcp_servers, rules, hooks, json_configs).
-3. https://antigravity.google/docs/cli/{settings,modes,mcp,headless,subagents}
+3. https://antigravity.google/docs/{settings,mcp,subagents}?tab=cli — the old
+   `/docs/cli/...` paths redirect there (checked 2026-10-04); `/docs/cli/hooks`
+   is a 404, use the shipped `hooks.md` instead.
 4. https://antigravity.google/docs/cli/reference — **partly stale**: still
    listed `/planning` and `/fast` after 1.1.0 removed them. Cross-check.
    Also client-rendered: `curl` gets no command list, read it in a browser.
@@ -104,23 +111,25 @@ were removed from the materials.)
 Facts that bit us this round (don't reintroduce):
 - Settings live in `~/.gemini/antigravity-cli/settings.json`, flat keys.
   `~/.gemini/settings.json` is the *old Gemini CLI* file.
-- Remote MCP servers use `"serverUrl"`; `url`/`httpUrl` are rejected.
+- Remote MCP servers use `"serverUrl"`. On 1.2.16 `url` also loads and the
+  shipped mcp_servers.md calls `serverUrl` legacy; `httpUrl` is not loaded.
+  Keep the examples on `serverUrl` until the docs settle.
 - Per-project customizations go under `.agents/` (`mcp_config.json`,
   `skills/`, `agents/`), not `.gemini/`.
 - Custom commands are skills (`SKILL.md`), not `commands/*.toml`.
-- Hooks: CLI 1.1.13 loads `~/.gemini/config/hooks.json` and plugin hooks
-  only — a workspace `.agents/hooks.json` is NOT picked up (tested with a
-  trusted workspace and a real turn; log says "loaded 1 named hooks from
-  1 hooks.json file(s)"). Re-test on each release; flip the slide/lab
-  wording back to `.agents/` when it starts working. Also: a non-object
-  top-level key (e.g. `_comment`) makes the CLI silently drop the whole file.
+- Hooks: a workspace `.agents/hooks.json` LOADS on 1.2.16 (probe from a
+  clean scratch dir with only `.agents/hooks.json` + `scripts/`: `/hooks`
+  listed both course hooks; log "loaded 3 named hooks from 2 hooks.json
+  file(s)"). It was NOT loaded on 1.1.13–1.1.24; slides, lab and
+  config-examples were flipped back to `.agents/` on 2026-10-04. Still true:
+  a non-object top-level key (e.g. `_comment`) makes the CLI silently drop
+  the whole file.
 - `${VAR}` is NOT expanded in `mcp_config.json` (verified 1.1.15: the literal
   string was sent as the Context7 header and rejected). Keys go in the global
   file, literally. Context7 replaced Firecrawl in Lab 6 on 2026-08-19.
-- Re-tested on 1.1.15 and 1.1.24: workspace `.agents/hooks.json` still not
-  loaded from the primary workspace. Quirk on 1.1.24: a `.agents/hooks.json`
-  inside a directory passed with `--add-dir` IS loaded (log: "from 2
-  hooks.json file(s)"), so don't let an `--add-dir` probe fool you. Probe at
+- Hooks probe, if it regresses again (1.1.24 quirk: a `.agents/hooks.json`
+  under an `--add-dir` directory loaded even when the primary workspace's
+  did not, so probe the primary workspace). Probe at
   the repo root: `mkdir -p .agents && cp config-examples/hooks.json .agents/
   && cp -r config-examples/scripts .agents/ && agy -p "/hooks"`, then
   `rm -rf .agents`.

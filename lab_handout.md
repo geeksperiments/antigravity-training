@@ -14,7 +14,7 @@ This document contains hands-on exercises for learning to use the Antigravity CL
 
 ## Prerequisites
 
-- Antigravity CLI installed (version 1.1.24 or later — check with `agy --version`, update with `agy update`):
+- Antigravity CLI installed (version 1.2.16 or later — check with `agy --version`, update with `agy update`):
   ```bash
   curl -fsSL https://antigravity.google/cli/install.sh | bash
   ```
@@ -430,8 +430,9 @@ echo "# Config Test" > README.md
    ```
    /permissions
    ```
-   Add an allow rule such as `command(git status)`, then look at the
-   `permissions.allow` array that appears in `settings.json`.
+   Add an allow rule such as `command(git status)`, then look at where it
+   landed: `/permissions` labels each rule `global` (`settings.json`) or
+   `shared` (`~/.gemini/config/config.json`).
 
    Then try the execution modes: press `Shift+Tab` to cycle
    `default` → `accept-edits` → `plan`, or launch with `agy --mode plan`.
@@ -579,7 +580,7 @@ echo "# Config Test" > README.md
    $EDITOR .agents/mcp_config.json            # this project only
    ```
    Or from the shell (1.1.16+): `agy mcp add -H "CONTEXT7_API_KEY: <key>" context7 https://mcp.context7.com/mcp`
-   writes the global file; `agy mcp list` shows what is configured.
+   writes the global file; `agy mcp list` shows the servers in the global file.
    Inside a session, `/mcp` shows server status and reloads the config.
 
 10. **Configure Context7** (remote server — current library docs):
@@ -598,8 +599,8 @@ echo "# Config Test" > README.md
     Paste the key literally: `${CONTEXT7_API_KEY}`-style substitution is **not**
     performed in `mcp_config.json` (the literal string is sent and rejected).
     That's why keyed servers belong in the global file, not a committed
-    `.agents/mcp_config.json`. Remote servers use `serverUrl`; `url`/`httpUrl`
-    are not supported. Restart `agy`, or `/mcp` to reload.
+    `.agents/mcp_config.json`. Remote servers use `serverUrl` (`url` also
+    loads on 1.2.x; `httpUrl` does not). Restart `agy`, or `/mcp` to reload.
 
 11. **Add a stdio server** (local process — no key):
     ```json
@@ -733,8 +734,8 @@ After completing this lab:
 
 5. **Enforce policy with a hook**:
    Copy `config-examples/hooks.json` and `config-examples/scripts/` from the
-   course repo into `~/.gemini/config/` (hooks are global or plugin-scoped in
-   CLI 1.1.24 — a workspace `.agents/hooks.json` still isn't loaded). The
+   course repo into this project's `.agents/` directory (workspace hooks load
+   on CLI 1.2.x; `~/.gemini/config/` still works for global hooks). The
    `PreToolUse` hook on `run_command` reads the tool call from stdin and
    answers `{"decision":"deny"}` for `git push --force`. Start `agy`, run
    `/hooks` to confirm it loaded, then ask:

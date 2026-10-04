@@ -28,8 +28,8 @@ default, no access outside the workspace, no G1 credit spend.
 
 ### mcp_config.json
 Context7 (remote, `serverUrl` + `headers`), filesystem (stdio, with
-`disabledTools`), and a disabled postgres entry. Remote servers must use
-`serverUrl` — `url`/`httpUrl` are rejected. No comment keys: keep the file to
+`disabledTools`), and a disabled postgres entry. Remote servers use
+`serverUrl` (`url` also loads on 1.2.x; `httpUrl` does not). No comment keys: keep the file to
 `mcpServers` only.
 
 ## Usage
@@ -57,12 +57,13 @@ Lifecycle hooks: a `PreToolUse` hook that denies `git push --force`, and a
 `Stop` hook that fires a desktop notification when a turn finishes.
 
 ```bash
-cp hooks.json ~/.gemini/config/ && cp -r scripts ~/.gemini/config/
+mkdir -p .agents && cp hooks.json .agents/ && cp -r scripts .agents/   # this project only
+cp hooks.json ~/.gemini/config/ && cp -r scripts ~/.gemini/config/      # global
 ```
 
-Start `agy` and run `/hooks` to see them registered. (CLI 1.1.24 loads hooks
-from `~/.gemini/config/` and from plugins; a workspace `.agents/hooks.json` is
-documented but still not picked up — re-verified 2026-09-02.) If you already have a
+Start `agy` and run `/hooks` to see them registered. (Verified on CLI 1.2.16: hooks load
+from `~/.gemini/config/`, from a workspace `.agents/hooks.json`, and from
+plugins; the workspace file was ignored on 1.1.x.) If you already have a
 `~/.gemini/config/hooks.json`, merge the named entries instead of overwriting.
 Don't add `_comment`-style keys: every top-level key must be a hook object, and
 a stray string makes the CLI silently drop the entire file (`/hooks` shows nothing). Hook commands run from the

@@ -109,13 +109,14 @@ SCHEDULE BREAKDOWN (5 hours total):
 
 ---
 
-# What's New in Antigravity CLI 1.1.x
+# What's New in Antigravity CLI 1.1 → 1.2
 
 <v-clicks>
 
 - **Safer control**: cycle `default` → `accept-edits` → `plan`, with review before writes
 - **Automation-ready output**: print mode supports JSON, streaming events, and response schemas
 - **Composable workflows**: custom agents, MCP management, workspace search, and voice input
+- **1.2.x (Sep–Oct 2026)**: Remote Control, unlimited headless runs with structured error exits, workspace `.agents/hooks.json`, `/skills reload`
 
 </v-clicks>
 
@@ -127,20 +128,20 @@ Full version-by-version reference in the appendix
 TIMING: ~0:15 into class.
 PRESENTER NOTE:
 - Use this slide to establish the three themes developed throughout the course.
-- The appendix preserves the detailed 1.1.x feature and version reference.
+- The appendix preserves the detailed 1.1.x/1.2.x feature and version reference.
 -->
 
 ---
 
 # One Brand, Three Products
 
-"Antigravity" is a family — each with its own release stream (versions as of Aug 2026):
+"Antigravity" is a family — each with its own release stream (versions as of Oct 2026):
 
 | | **Antigravity 2.0** (app) | **Antigravity IDE** | **Antigravity CLI** |
 |---|---|---|---|
 | What it is | Desktop supervisor | VS Code-based IDE | Terminal agent (`agy`) |
 | Best for | Agent oversight and scheduled work | Coding inside an editor | Delegated coding, CI, and SSH |
-| Version | 2.8.x | 2.5.x | 1.1.x |
+| Version | 2.17.x | 2.5.x | 1.2.x |
 | Data subdir | `antigravity/` | `antigravity-ide/` | `antigravity-cli/` |
 
 Base path: `~/.gemini/` · Python SDK: `pip install google-antigravity`
@@ -196,8 +197,8 @@ flowchart TB
 <v-clicks>
 
 - Google's Go-based AI coding agent for the terminal (binary: `agy`)
-- **Multi-model**: Gemini 3.x, Claude Sonnet/Opus 4.6, GPT-OSS — switch with `/model`
-- Built-in tools: web search, file ops, shell, web fetch
+- **Multi-model**: Gemini 3.x, Claude Sonnet/Opus 5.5, GPT-OSS — switch with `/model`
+- Built-in tools: web search, file ops, shell, web fetch (URL fetches ask for approval since 1.1.28)
 - Model Context Protocol (MCP) support via `mcp_config.json`
 - Same `~/.gemini` config family as the Antigravity 2.0 desktop app and IDE
 
@@ -225,10 +226,11 @@ flowchart TB
 
 - **Gemini 3.8 / 3.7 / 3.6 Flash**: fast Gemini models, each in Low/Medium/High effort
 - **Gemini 3.1 Pro**: high-capability Gemini model for complex coding (Low/High)
-- **Claude Sonnet 4.6 / Opus 4.6**: Anthropic models (thinking)
+- **Claude Sonnet 5.5 / Opus 5.5**: Anthropic models, Low/Medium/High effort
 - **GPT-OSS 120B**: open-weights option
 - **List models**: `agy models`  ·  **Switch**: `/model` or `--model <slug>`
-- **Reasoning effort**: `--effort low|medium|high` or `/effort` mid-session
+- **Reasoning effort**: `--effort low|medium|high` (`xhigh`/`max` where a model supports them) or `/effort` mid-session
+- **Gemini 4 Argon**: announced 2026-09-30, rolling out to Fairwind cyber-defense testers first — not in `agy models` yet
 
 </v-clicks>
 
@@ -241,7 +243,7 @@ flowchart TB
 - **Free tier**: sign in with a Google account to get started
 - **G1 credits**: kick in automatically when standard quota runs out
 - **In-CLI panels**: `/credits`, `/usage`, `/quota` for real-time status
-- Manage models and preferences via `/settings`
+- Manage models and preferences via `/config` (alias: `/settings`)
 
 </v-clicks>
 
@@ -409,7 +411,7 @@ agy -p "Analyze the architecture in @./src/"
 - `/help` - Show available commands and shortcuts
 - `/context` - View loaded context and token usage
 - `/model` · `/effort` - Switch model or reasoning effort mid-session
-- `/settings` - Open settings and preferences
+- `/config` (alias `/settings`) - Open settings and preferences
 - `/codesearch <query>` (`/cs`) - Regex search across the workspace
 
 </v-clicks>
@@ -455,8 +457,8 @@ agy -p "Analyze the architecture in @./src/"
 # Manage tool permission rules
 /permissions
 
-# Open settings and preferences
-/settings
+# Open settings and preferences (/settings is an alias)
+/config
 ```
 
 ---
@@ -524,10 +526,10 @@ agy -p "Analyze the architecture in @./src/"
 
 <v-clicks>
 
-- **File System**: `read_file()`, `write_file()`, `replace()`, `glob()`
-- **Shell**: Execute terminal commands
-- **Web**: `google_web_search()`, `web_fetch()`
-- **Memory**: `save_memory()` for cross-session recall
+- **File System**: `view_file`, `write_to_file`, `replace_file_content`
+- **Shell**: `run_command` — foreground, or backgrounded for servers
+- **Web**: `search_web`, `read_url_content` (URL fetches ask first since 1.1.28)
+- **Agent**: `ask_question`, `invoke_subagent`, `call_mcp_tool`
 
 </v-clicks>
 
@@ -860,7 +862,7 @@ backgroundSize: cover
 <v-clicks>
 
 1. **Default values** - Built-in defaults
-2. **User settings** - `~/.gemini/antigravity-cli/settings.json` (edit via `/settings`)
+2. **User settings** - `~/.gemini/antigravity-cli/settings.json` (edit via `/config`); shared permission rules in `~/.gemini/config/config.json`
 3. **Workspace files** - `.agents/mcp_config.json`, `.agents/agents/`, `AGENTS.md`
 4. **Environment variables** - e.g. `GEMINI_API_KEY`, `AGY_CLI_CMD_OUTPUT_PERCENTAGE`
 5. **Command-line arguments** - `--mode`, `--model`, `--effort`, … highest priority
@@ -900,7 +902,7 @@ backgroundSize: cover
 }
 ```
 
-Full list: `/settings` in-session, or `agy -p "/settings"` to dump current values.
+Full list: `/config` in-session, or `agy -p "/settings"` to dump current values.
 
 ---
 
@@ -948,29 +950,6 @@ agy --dangerously-skip-permissions
 ```
 
 📖 [antigravity.google/docs](https://antigravity.google/docs)
-
----
-
-# File Filtering
-
-<v-clicks>
-
-- **respectGitIgnore**: Honor .gitignore patterns
-- **enableRecursiveFileSearch**: Recursive completion
-- Exclude rules and allowlists live in `rules.json`
-
-</v-clicks>
-
-```json
-{
-  "context": {
-    "fileFiltering": {
-      "respectGitIgnore": true,
-      "enableRecursiveFileSearch": true
-    }
-  }
-}
-```
 
 ---
 
@@ -1092,7 +1071,7 @@ flowchart LR
       "command": "npx",
       "args": ["@modelcontextprotocol/server-postgres"],
       "env": {
-        "CONNECTION_STRING": "${DATABASE_URL}"
+        "CONNECTION_STRING": "postgresql://user:pass@localhost/db"
       }
     }
   }
@@ -1132,13 +1111,13 @@ Servers initialize in parallel on startup.
 
 # MCP: Remote Servers
 
-Use `serverUrl` for HTTP/SSE remote MCP servers (`url`/`httpUrl` are **not** supported):
+Use `serverUrl` for remote (Streamable HTTP) MCP servers — `url` also loads on 1.2.x, `httpUrl` does not; legacy SSE endpoints are not supported:
 
 ```json
 {
   "mcpServers": {
     "remote-tools": {
-      "serverUrl": "https://mcp.example.com/sse",
+      "serverUrl": "https://mcp.example.com/mcp",
       "headers": { "Authorization": "Bearer <token>" }
     }
   }
@@ -1307,7 +1286,7 @@ Review the referenced code for security, performance, and test gaps…
 
 <v-clicks>
 
-- Shell commands that run at fixed points in the agent loop — `hooks.json` in `~/.gemini/config/` or inside a plugin
+- Shell commands that run at fixed points in the agent loop — `hooks.json` in `~/.gemini/config/`, in the workspace `.agents/`, or inside a plugin
 - **`PreToolUse`** — gate or rewrite a tool call: return `allow` / `deny` / `ask` (matcher on tool name, e.g. `run_command`)
 - **`PostToolUse`** — run a linter or tests after a tool finishes
 - **`PreInvocation` / `PostInvocation`** — inject context before the model runs; force-continue after
@@ -1365,7 +1344,7 @@ Complete example: `config-examples/hooks.json`
 </v-clicks>
 
 <div class="mt-8 border-l-4 border-amber-400 pl-4 opacity-80">
-As of 1.1.24, the CLI loads hooks from <code>~/.gemini/config/</code> and plugins. A workspace <code>.agents/hooks.json</code> is documented but was still not picked up when re-verified on 2026-09-02.
+Verified on 1.2.16: hooks load from <code>~/.gemini/config/</code>, from a workspace <code>.agents/hooks.json</code>, and from plugins. The workspace file was ignored on 1.1.x — update if a student is on an older build.
 </div>
 
 ---
@@ -1401,7 +1380,8 @@ agy --conversation <id>
 - **`-p` / `--print`**: run a single prompt and print the response
 - **`--output-format`**: `text` (default) · `json` (one envelope) · `stream-json` (NDJSON events)
 - **`--json-schema`**: constrain the answer to a schema (inline or file path)
-- **`--print-timeout`**: bound how long print mode waits (default 5m)
+- **`--print-timeout`**: bound how long print mode waits (unlimited by default since 1.2.6; on expiry you get the partial output and exit 0)
+- **Failures** exit with code 3 and print an `AGY_ERROR: {...}` JSON line on stderr (1.2.6)
 - Skills expand in `-p` (`agy -p "/my-skill …"`); read-only commands like `/settings`, `/quota` answer without spending quota
 
 </v-clicks>
@@ -1662,7 +1642,7 @@ agy
 
 - `--dangerously-skip-permissions` is a per-session escape hatch
 - `/permissions` rules provide durable guardrails across users/projects
-- `PreToolUse` hooks (`~/.gemini/config/hooks.json`, or shipped in a plugin) enforce policy the rules can't express
+- `PreToolUse` hooks (`~/.gemini/config/hooks.json`, a workspace `.agents/hooks.json`, or shipped in a plugin) enforce policy the rules can't express
 - Keep high-risk tools constrained in team settings
 - Prefer explicit allow/deny patterns over ad-hoc approvals
 
@@ -2013,7 +1993,8 @@ Version details and command reference
 - **Slash commands in `-p`**: skills expand; read-only commands avoid quota use (1.1.9–1.1.12)
 - **Direct Gemini API**: `GEMINI_API_KEY` + `modelProvider: "gemini"` — no sign-in (1.1.13)
 - **Later additions**: `agy mcp add|list|remove` (1.1.16), `/voice` (1.1.21), saved `/model <name>` defaults (1.1.22)
-- **Latest stable track**: Antigravity CLI `1.1.24` — see `agy changelog`
+- **1.2.x**: Remote Control (`agy remote-control start|status|stop`, `--remote-control`), unlimited `-p` runs + `AGY_ERROR` exit 3 (1.2.6), `/skills reload` (1.2.4), `@<subagent> <msg>` (1.2.9), workspace `.agents/hooks.json` loads
+- **Latest stable track**: Antigravity CLI `1.2.16` — see `agy changelog`
 
 ---
 
