@@ -171,7 +171,8 @@ the easiest way to build your allow list.
 
 Choose one of the provided exercise projects:
 - `exercises/python/weather-app` (Flask application)
-- `exercises/javascript/task-manager` (Node.js CLI app)
+- `exercises/javascript/task-manager` (Node.js CLI app — similar to what you
+  built in Lab 1, so pick Python or Java if you want unfamiliar code)
 - `exercises/java/bookstore-api` (Spring Boot REST API)
 
 Navigate to the project directory and start the Antigravity CLI with `agy`.
