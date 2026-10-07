@@ -1123,9 +1123,9 @@ agy plugin disable my-plugin && agy plugin enable my-plugin
 
 - Ask the agent to **delegate**: it dispatches a subagent via `invoke_subagent`
 - Define your own in Markdown: `.agents/agents/<name>.md` (or `~/.gemini/config/agents/`)
-- Frontmatter: `name` + `description` (required), `subagent: true`, `mainAgent`, `model: flash|pro|inherit`, `tools`, `commandExecutionPolicy`, `skills`; newer: `agents:`, `rules:`, `excludeDefaultComponents`
-- Talk to one directly: `@<subagent> <message>` (1.2.9) · monitor with `/agents`, shell tasks with `/tasks`
-- Built-ins: `research`, `browser` (`/browser`), `self`; `/boost` and `/teamwork-preview` orchestrate teams of them
+- Frontmatter: `name` + `description` (required); `subagent`, `mainAgent`, `model: flash|pro|inherit`, `tools`, `skills`, `rules`, `agents`
+- Talk to one directly: `@<subagent> <message>` (1.2.9) · monitor with `/agents` and `/tasks`
+- Built-ins: `research`, `browser`, `self` · `/boost` and `/teamwork-preview` orchestrate teams
 - Launch straight into a custom agent: `agy --agent <name>` · list with `agy agents`
 
 </v-clicks>
@@ -1308,22 +1308,17 @@ PRESENTER NOTE: described from `agy remote-control --help` and the 1.2.0–1.2.6
 - **`-p` / `--print`**: run a single prompt and print the response
 - **`--output-format`**: `text` (default) · `json` (one envelope) · `stream-json` (NDJSON events)
 - **`--json-schema`**: constrain the answer to a schema (inline or file path)
-- **`--print-timeout`**: bound how long print mode waits (unlimited by default since 1.2.6; on expiry you get the partial output and exit 0)
+- **`--print-timeout`**: cap the wait (unlimited by default since 1.2.6; on expiry: partial output, exit 0)
 - **Failures** exit with code 3 and print an `AGY_ERROR: {...}` JSON line on stderr (1.2.6)
-- Skills expand in `-p` (`agy -p "/my-skill …"`); read-only commands like `/settings`, `/quota` answer without spending quota
+- Skills expand in `-p` (`agy -p "/my-skill …"`); read-only commands like `/quota` cost no quota
 
 </v-clicks>
 
 ```bash
-# One-shot print mode, piped input
-cat error.log | agy -p "Diagnose this stack trace"
-
-# Machine-readable: {"status":"SUCCESS","response":"…","usage":{…}}
-agy -p "Summarize @./README.md" --output-format json
-
-# Enforce a schema; result lands in "structured_output"
+cat error.log | agy -p "Diagnose this stack trace"           # piped input
+agy -p "Summarize @./README.md" --output-format json         # {"status":"SUCCESS","response":…}
 agy -p "Extract version from @./package.json" --output-format json \
-    --json-schema '{"type":"object","properties":{"version":{"type":"string"}}}'
+    --json-schema '{"type":"object","properties":{"version":{"type":"string"}}}'  # -> structured_output
 ```
 
 ---
