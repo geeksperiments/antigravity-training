@@ -607,25 +607,29 @@ Ctrl+R
 
 # Agent Execution & Review Loop
 
-```mermaid {scale: 0.72}
+```mermaid {scale: 0.85}
 stateDiagram-v2
     direction LR
-    state "Load context<br/>and plan" as Plan
-    state "Pre-tool hook<br/>default review / accept-edits" as Review
-    state "Execute tool<br/>or edit files" as Execute
-    state "Post-tool hooks<br/>and tests" as Verify
+    state "Plan" as Plan
+    state "Pre-tool hook<br/>+ review" as Review
+    state "Execute" as Execute
+    state "Post-tool hook<br/>+ tests" as Verify
     state "Respond" as Reply
 
-    [*] --> Plan: Task
-    Plan --> Reply: No tool needed
-    Plan --> Review: Tool needed
-    Review --> Plan: Deny or reject
-    Review --> Execute: Approve / auto
+    [*] --> Plan
+    Plan --> Reply: no tool
+    Plan --> Review: tool
+    Review --> Plan: deny
+    Review --> Execute: approve
     Execute --> Verify
-    Verify --> Plan: More work
-    Verify --> Reply: Stop hook
+    Verify --> Plan: more
+    Verify --> Reply: done
     Reply --> [*]
 ```
+
+<div class="text-sm opacity-80 mt-2">
+Review = interactive diff in <code>default</code> mode, auto-approved in <code>accept-edits</code>. Hooks run before and after every tool call.
+</div>
 
 ---
 
