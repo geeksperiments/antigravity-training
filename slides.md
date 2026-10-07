@@ -537,23 +537,18 @@ backgroundSize: cover
 <v-clicks>
 
 - **Default** (`request-review`): prompt for approval on each tool call
-- **Approval prompts offer a scoped always-allow** (e.g. `git status` with any arguments) — the quickest way to grow your allow list (1.2.15)
-- **`/permissions`**: add, edit, or remove allow/deny rules; two layers — `global` (`settings.json`) and `shared` (`~/.gemini/config/config.json`, shared with the desktop app)
-- Rule kinds: `command(...)`, `read_file(path)`, `read_url(host)`; `unsandboxed` rules are deprecated in favor of `command` (1.2.2)
+- Approval prompts offer a **scoped always-allow** (e.g. `git status` with any args) — the quickest way to grow your allow list (1.2.15)
+- **`/permissions`**: add, edit, or remove rules in two layers — `global` (`settings.json`) and `shared` (`~/.gemini/config/config.json`, shared with the desktop app)
+- Rule kinds: `command(...)`, `read_file(path)`, `read_url(host)` (`unsandboxed` is deprecated, 1.2.2)
 - **`toolPermission`** setting: `request-review` · `proceed-in-sandbox` · `strict` · `always-proceed`
 - **`--dangerously-skip-permissions`**: auto-approve everything (use with care)
 
 </v-clicks>
 
 ```bash
-# Default - interactive, prompts per tool call
-agy
-
-# Auto-approve all tool calls (use with care)
-agy --dangerously-skip-permissions
-
-# Manage allow/deny rules from inside a session
-> /permissions
+agy                                  # prompts per tool call
+agy --dangerously-skip-permissions   # auto-approve everything
+> /permissions                       # manage rules in-session
 ```
 
 ---
